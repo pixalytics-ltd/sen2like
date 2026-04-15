@@ -1,0 +1,46 @@
+name: Unit Tests
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ '**' ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: |
+        docker build -f Dockerfile.github -t sen2like-test .
+
+    - name: Run tests with coverage in Docker
+      run: |
+        docker run sen2like-test bash -c "
+          cd /app/sen2like &&
+          echo '=== Running tests with coverage ===' &&
+          [ -d reports ] || mkdir reports &&
+          PYTHONPATH=/app/sen2like:/app/sen2like/sen2like:/app/sen2like/sen2like/aux_data coverage run --source=sen2like --branch -m pytest -v -k 'not test_landsat and not test_s2_l1c and not test_s2_l2a and not test_sentinel2_maja and not test_landsat_maja and not test_S2B_band01 and not test_S2B_band09 and not test_landsat_intercalibration' --junitxml=reports/junit.xml &&
+          coverage xml -o reports/coverage.xml &&
+          coverage report -m > reports/coverage.report &&
+          echo '=== Test coverage report ===' &&
+          cat reports/coverage.report
+        "
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: success() || failure()
+      with:
+        name: test-results
+        path: sen2like/reports/
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./sen2like/reports/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false

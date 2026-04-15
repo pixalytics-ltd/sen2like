@@ -1,5 +1,18 @@
 # Sen2Like Release Notes
 
+## v4.5.3
+
+### New features
+
+* Add support for CreoDIAS ODATA API
+* Support CAMS CF-1.7 convention and previous CF-1.6 convention
+
+### Fix
+
+* Fixed SQL-related issues in Prisma module
+* Security fix to avoid using deprecated/unsafe tarfile.extractall()
+* Added GitHub Actions CI/CD
+
 ## v4.5.2
 
 ### Fix
