@@ -1,3 +1,6 @@
 /sen2like/sen2like/sen2like.egg-info
 *.png
 run_acolite.ipynb
+/output
+*.pyc
+/None
