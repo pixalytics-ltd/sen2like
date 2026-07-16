@@ -20,6 +20,7 @@ import shutil
 import glob
 import numpy as np
 from osgeo import gdal, ogr, osr
+import xarray as xr
 import argparse
 import subprocess
 import zipfile
@@ -252,7 +253,7 @@ def l1_ingest(data_array, outdir, metadata, settings = {}, verbosity = 5, output
 
     print("Wrote: {}".format(ofile))
 
-    return([ofile], setu)
+    return([ofile], setu, wavelengths)
 
 
 def acolite_adjustment(data_array, outdir, metadata):
@@ -286,10 +287,10 @@ def acolite_adjustment(data_array, outdir, metadata):
 
     # setup L1 inputs
     ret = l1_ingest(data_array, outdir, metadata, settings = {}, verbosity = 5, output = None)
-    if len(ret) != 2:
+    if len(ret) != 3:
         l1r = []
     else:
-        l1r, _ = ret
+        l1r, _ , wavelengths = ret
     if len(l1r) == 0: raise ValueError("ACOLITE: Unable to convert L1 inputs")
     
     print("Running AC")
@@ -307,9 +308,14 @@ def acolite_adjustment(data_array, outdir, metadata):
         
     print("Generated: {}".format(l2r))
 
-    
-
-
+    # Read the netcdf file into the xarray
+    data = xr.open_dataset(l2r)
+    print(data_array)
+    print(data)
+    nbands = data_array.sizes["band"]
+    for b in range(nbands):
+        wave = '{:.0f}'.format(wavelengths[b])
+        data_array[b,:,:] = data['rhos_{}'.format(wave)]
 
     return data_array
 
